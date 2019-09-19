@@ -46,5 +46,6 @@ app.layout = html.Div([
                 style={'fontSize':24,'paddingLeft':10})
 ])
 
+
 if __name__ == "__main__":
     app.run_server()
