@@ -26,18 +26,19 @@ body = dbc.Container([
             html.H5("Select Stock symbols"),
             dcc.Dropdown(
             id='stock-name',
-            options=[{'label':i,'value':j} for i, j in zip(df['Symbol'],df['Name'])],
+            options=[{'label':i,'value':i} for i in df['Symbol']],
             multi=True,
-            value='ABMD'
+            value="TSLA"
         )
         ]),
         dbc.Col([
             html.H5("Select start and end dates:"),
             dcc.DatePickerRange(
             id='stock-date-picker-range',
-            min_date_allowed=dt(1990,1,1),
+            min_date_allowed=dt(2015,1,1),
             max_date_allowed=date.today(),
-            initial_visible_month=dt(2019,7,7)
+            start_date=dt(2018,1,1),
+            end_date=dt.today()
         )
         ]),
         dbc.Col([
@@ -72,17 +73,23 @@ body = dbc.Container([
 app.layout = html.Div([navbar, body])
 
 @app.callback(Output('stock-price-main','figure'),
-             [Input('stock-name','value'),
-             Input('stock-date-picker-range','start_date'),
-             Input('stock-date-picker-range','start_date')])
-def update_graph(stock_ticker,start_date,end_date):
-    df = web.DataReader(stock_ticker,"av-daily",start_date,end_date,access_key=os.getenv('ALPHAVANTAGE_API_KEY'))
+              [Input('submit-button','n_clicks')],
+              [State('stock-name','value'),
+              State('stock-date-picker-range','start_date'),
+              State('stock-date-picker-range','end_date')])
+def update_graph(n_clicks,stock_ticker,start_date,end_date):
+    data = []
+    for stok in stock_ticker:
+        start = dt.strptime(start_date[:10],'%Y-%m-%d')
+        end = dt.strptime(end_date[:10],'%Y-%m-%d')        
+        df = web.DataReader(stok,"yahoo",start,end)
+        data.append({'x':df.index,'y':df['Close']})
     fig = {
-        'data':[{'x':df.index,'y':df['close']}],
-        'layout':{'title':stock_ticker}
+       'data':data,
+       'layout':{'title':stock_ticker[0]}
     }
+        
     return fig
-
 
 if __name__ == "__main__":
     app.run_server()
